@@ -1147,7 +1147,7 @@ if( APPLE )
 endif()
 
 # Force set compilers because standard identification works badly for us
-if(${CMAKE_VERSION} VERSION_LESS 3.0.0)
+if(${CMAKE_VERSION} VERSION_LESS 3.5.0)
  include( CMakeForceCompiler )
  CMAKE_FORCE_C_COMPILER( "${CMAKE_C_COMPILER}" GNU )
  if( ANDROID_COMPILER_IS_CLANG )
@@ -1185,6 +1185,10 @@ if(${CMAKE_VERSION} VERSION_LESS 3.0.0)
    set( CMAKE_${lang}_COMPILER_VERSION ${ANDROID_COMPILER_VERSION} )
   endif()
  endforeach()
+else()
+ set(CMAKE_C_COMPILER "${CMAKE_C_COMPILER}" CACHE FILEPATH "" FORCE)
+ set(CMAKE_CXX_COMPILER "${CMAKE_CXX_COMPILER}" CACHE FILEPATH "" FORCE)
+ set(CMAKE_ASM_COMPILER "${CMAKE_ASM_COMPILER}" CACHE FILEPATH "" FORCE)
 endif()
 
 # flags and definitions
@@ -1715,8 +1719,8 @@ if( CMAKE_GENERATOR MATCHES "Ninja" AND CMAKE_HOST_WIN32 )
  # CMake generates Ninja makefiles with UNIX paths only if it thinks that we are going to build with MinGW
  set( CMAKE_COMPILER_IS_MINGW TRUE ) # tell CMake that we are MinGW
  set( CMAKE_CROSSCOMPILING TRUE )    # stop recursion
- enable_language( C )
- enable_language( CXX )
+ #enable_language( C )
+ #enable_language( CXX )
  # unset( CMAKE_COMPILER_IS_MINGW ) # can't unset because CMake does not convert back-slashes in response files without it
  unset( MINGW )
 endif()
