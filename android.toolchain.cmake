@@ -1147,7 +1147,7 @@ if( APPLE )
 endif()
 
 # Force set compilers because standard identification works badly for us
-if(${CMAKE_VERSION} VERSION_LESS 3.5.0)
+if(${CMAKE_VERSION} VERSION_LESS 3.6.0)
  include( CMakeForceCompiler )
  CMAKE_FORCE_C_COMPILER( "${CMAKE_C_COMPILER}" GNU )
  if( ANDROID_COMPILER_IS_CLANG )
