@@ -1625,6 +1625,27 @@ set( CMAKE_FIND_LIBRARY_PREFIXES
   "${ANDROID_NDK_ABI_NAME}/lib"
   "libs/${ANDROID_NDK_ABI_NAME}/lib"
   "android/libs/${ANDROID_NDK_ABI_NAME}/lib" )
+if( ANDROID_CRYSTAX_NDK )
+  # Supports finding Boost on newer CrystaX
+  if(ANDROID_COMPILER_IS_CLANG)
+    set(ANDROID_POSSIBLE_BOOST_LIBDIR_SUFFIX
+      "libs/${ANDROID_NDK_ABI_NAME}/llvm-${ANDROID_CLANG_VERSION}")
+  else()
+    set(ANDROID_POSSIBLE_BOOST_LIBDIR_SUFFIX
+      "libs/${ANDROID_NDK_ABI_NAME}/gnu-${ANDROID_COMPILER_VERSION}")
+  endif()
+
+  list(APPEND CMAKE_FIND_LIBRARY_PREFIXES
+    "${ANDROID_POSSIBLE_BOOST_LIBDIR_SUFFIX}")
+  if(NOT BOOST_LIBRARYDIR)
+    foreach(_libroot ${ANDROID_CRYSTAX_EXTRA_LIBS})
+      if("${_libroot}" MATCHES "boost" AND EXISTS "${_libroot}/${ANDROID_POSSIBLE_BOOST_LIBDIR_SUFFIX}")
+        set(BOOST_LIBRARYDIR "${_libroot}/${ANDROID_POSSIBLE_BOOST_LIBDIR_SUFFIX}")
+        break()
+      endif()
+    endforeach()
+  endif()
+endif()
 
 # only search for libraries and includes in the ndk toolchain
 set( CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY )
