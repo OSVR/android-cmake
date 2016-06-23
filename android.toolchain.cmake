@@ -157,6 +157,10 @@
 #        c++_static     -> Use libc++ as a static library.
 #        c++_shared     -> Use libc++ as a shared library.
 #
+#    ANDROID_LIBCXX_VERSION - If you're using libc++ and clang, defaults to your
+#      clang version. Is needed in some NDKs (such as CrystaX) that bundle multiple
+#      versions of libc++.
+#
 #    ANDROID_STL_FORCE_FEATURES=ON - turn rtti and exceptions support based on
 #      chosen runtime. If disabled, then the user is responsible for settings
 #      these options.
@@ -1074,40 +1078,50 @@ if( BUILD_WITH_ANDROID_NDK )
   set( ANDROID_RTTI             ON )
   set( ANDROID_CXX_ROOT     "${ANDROID_NDK}/sources/cxx-stl/" )
   set( ANDROID_LLVM_ROOT    "${ANDROID_CXX_ROOT}/llvm-libc++" )
-  if(NOT EXISTS "${ANDROID_LLVM_ROOT}/libcxx")
-   # Some other NDKs (CrystaX) include multiple versions...
-   if(NOT ANDROID_LIBCXX_VERSION)
-    set(ANDROID_LIBCXX_VERSION ${ANDROID_CLANG_VERSION})
-   endif()
-   set(ANDROID_LLVM_ROOT_NEW "${ANDROID_LLVM_ROOT}/${ANDROID_LIBCXX_VERSION}")
-   if(NOT EXISTS "${ANDROID_LLVM_ROOT_NEW}/libcxx")
-    message(FATAL_ERROR "Can't find libc++ - looked in ${ANDROID_LLVM_ROOT} and ${ANDROID_LLVM_ROOT_NEW}. Maybe set ANDROID_LIBCXX_VERSION?")
-   endif()
-   set(ANDROID_LLVM_ROOT "${ANDROID_LLVM_ROOT_NEW}")
+
+  # Some other NDKs (CrystaX) include multiple versions...
+  if(NOT ANDROID_LIBCXX_VERSION)
+   set(ANDROID_LIBCXX_VERSION ${ANDROID_CLANG_VERSION})
   endif()
+
+  find_file(ANDROID_LIBCXX_LIBRARY
+   NAMES
+   libc++_static.a
+   HINTS
+   "${ANDROID_LLVM_ROOT}/${ANDROID_LIBCXX_VERSION}/libs"
+   "${ANDROID_LLVM_ROOT}/libs"
+   PATH_SUFFIXES ${ANDROID_LIB_PATH_SUFFIXES}
+   NO_DEFAULT_PATH)
+
+  find_path(ANDROID_LIBCXX_INCLUDE_DIR __config
+   HINTS
+   "${ANDROID_LLVM_ROOT}/${ANDROID_LIBCXX_VERSION}/libcxx/include"
+   "${ANDROID_LLVM_ROOT}/libcxx/include"
+   NO_DEFAULT_PATH)
+
+  if(NOT ANDROID_LIBCXX_LIBRARY OR NOT ANDROID_LIBCXX_INCLUDE_DIR)
+   message(FATAL_ERROR "Can't find libc++ - looked in ${ANDROID_LLVM_ROOT} and ${ANDROID_LLVM_ROOT_NEW}. Maybe set ANDROID_LIBCXX_VERSION?")
+  endif()
+  mark_as_advanced(ANDROID_LIBCXX_LIBRARY ANDROID_LIBCXX_INCLUDE_DIR)
+  set(__libstl "${ANDROID_LIBCXX_LIBRARY}")
   if( X86 )
+   # TODO why using gabi++ on X86?
    set( ANDROID_ABI_INCLUDE_DIR "${ANDROID_CXX_ROOT}/gabi++/include" )
   else()
-   set( ANDROID_ABI_INCLUDE_DIR "${ANDROID_CXX_ROOT}/llvm-libc++abi/include" )
-   if(NOT EXISTS "${ANDROID_ABI_INCLUDE_DIR}")
-    set(ANDROID_ABI_INCLUDE_DIR "${ANDROID_CXX_ROOT}/llvm-libc++abi/libcxxabi/include")
-   endif()
-   if(NOT EXISTS "${ANDROID_ABI_INCLUDE_DIR}")
+   find_path(ANDROID_LIBCXXABI_INCLUDE_DIR cxxabi.h
+    HINTS
+    "${ANDROID_CXX_ROOT}/llvm-libc++abi/libcxxabi/include"
+    "${ANDROID_CXX_ROOT}/llvm-libc++abi/include"
+    NO_DEFAULT_PATH)
+   mark_as_advanced(ANDROID_LIBCXXABI_INCLUDE_DIR)
+   if(NOT ANDROID_LIBCXXABI_INCLUDE_DIR)
     message(FATAL_ERROR "Could not find libc++abi include directory")
    endif()
+   set(ANDROID_ABI_INCLUDE_DIR "${ANDROID_LIBCXXABI_INCLUDE_DIR}")
   endif()
-  set( ANDROID_STL_INCLUDE_DIRS     "${ANDROID_LLVM_ROOT}/libcxx/include"
+  set( ANDROID_STL_INCLUDE_DIRS     "${ANDROID_LIBCXX_INCLUDE_DIR}"
                                     "${ANDROID_ABI_INCLUDE_DIR}"
                                     "${ANDROID_NDK}/sources/android/support/include" )
-  # android support sfiles
-  #include_directories ( SYSTEM ${ANDROID_NDK}/sources/android/support/include )
-  if( ANDROID_STL MATCHES "shared" AND EXISTS "${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so" )
-   set( __libstl 				"${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_shared.so" )
-  elseif( ANDROID_STL MATCHES "static" AND EXISTS "${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_static.a" )
-   set( __libstl 				"${ANDROID_LLVM_ROOT}/libs/${ANDROID_NDK_ABI_NAME}/libc++_static.a" )
-  else()
-   message( "c++ library doesn't exist" )
-  endif()
  else()
   message( FATAL_ERROR "Unknown runtime: ${ANDROID_STL}" )
  endif()
