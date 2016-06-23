@@ -1573,21 +1573,36 @@ link_directories( "${__android_install_path}" )
 
 # CrystaX meddling, to insert libcrystax in the right place in the link line.
 if( ANDROID_CRYSTAX_NDK )
-  set(__conditional_thumb)
-  if( (ARMEABI_V7A OR ARMEABI) AND NOT ANDROID_FORCE_ARM_BUILD )
-    set(__conditional_thumb /thumb)
-  endif()
   if( ANDROID_CRYSTAX_NDK_SHARED_LIBCRYSTAX )
-    set( ANDROID_CRYSTAX_LIBCRYSTAX_LIBRARY "${ANDROID_NDK}/sources/crystax/libs/${ANDROID_NDK_ABI_NAME}${__conditional_thumb}/libcrystax.so")
-    set( ANDROID_CRYSTAX_LINK_LIBRARY_MODS "\"${ANDROID_CRYSTAX_LIBCRYSTAX_LIBRARY}\" -lc")
+    find_file(ANDROID_CRYSTAX_LIBCRYSTAX_SHARED_LIBRARY
+      libcrystax.so
+      HINTS
+      "${ANDROID_NDK}/sources/crystax/libs/"
+      PATH_SUFFIXES
+      ${ANDROID_LIB_PATH_SUFFIXES})
+    mark_as_advanced(ANDROID_CRYSTAX_LIBCRYSTAX_SHARED_LIBRARY)
+    set( ANDROID_CRYSTAX_LINK_LIBRARY_MODS "\"${ANDROID_CRYSTAX_LIBCRYSTAX_SHARED_LIBRARY}\" -lc")
   else()
-    set( ANDROID_CRYSTAX_LIBCRYSTAX_LIBRARY "${ANDROID_NDK}/sources/crystax/libs/${ANDROID_NDK_ABI_NAME}${__conditional_thumb}/libcrystax.a")
-    set( ANDROID_CRYSTAX_LINK_LIBRARY_MODS "-u __crystax_on_load -u __crystax_on_unload ${ANDROID_CRYSTAX_LIBCRYSTAX_LIBRARY} -lc")
+    find_file(ANDROID_CRYSTAX_LIBCRYSTAX_STATIC_LIBRARY
+      libcrystax.a
+      HINTS
+      "${ANDROID_NDK}/sources/crystax/libs/"
+      PATH_SUFFIXES
+      ${ANDROID_LIB_PATH_SUFFIXES})
+    mark_as_advanced(ANDROID_CRYSTAX_LIBCRYSTAX_STATIC_LIBRARY)
+    set( ANDROID_CRYSTAX_LINK_LIBRARY_MODS "-u __crystax_on_load -u __crystax_on_unload ${ANDROID_CRYSTAX_LIBCRYSTAX_STATIC_LIBRARY} -lc")
   endif()
   foreach( __op CREATE_SHARED_LIBRARY CREATE_SHARED_MODULE LINK_EXECUTABLE )
     foreach( __lang C CXX )
-      string(REPLACE "-lm" "" CMAKE_${__lang}_${__op} "${CMAKE_${__lang}_${__op}}")
-      set(CMAKE_${__lang}_${__op} "${CMAKE_${__lang}_${__op}} ${ANDROID_CRYSTAX_LINK_LIBRARY_MODS}")
+      set(_inprogress "${CMAKE_${__lang}_${__op}}")
+      if(NOT "${_inprogress}" MATCHES "libcrystax")
+        # delete -lm
+        string(REPLACE "-lm" "" _inprogress "${_inprogress}")
+        # put the crystax lib and libc on the end
+        set(_inprogress "${_inprogress} ${ANDROID_CRYSTAX_LINK_LIBRARY_MODS}")
+        # update the variable.
+        set(CMAKE_${__lang}_${__op} "${_inprogress}")
+      endif()
     endforeach()
     string(REPLACE "<CMAKE_C_COMPILER>" "<CMAKE_CXX_COMPILER>" CMAKE_CXX_${__op} "${CMAKE_CXX_${__op}}")
   endforeach()
