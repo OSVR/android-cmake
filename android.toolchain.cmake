@@ -1265,7 +1265,7 @@ elseif()
  set( ANDROID_CXX_FLAGS_DEBUG   "" )
 endif()
 
-set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fsigned-char" ) # good/necessary when porting desktop libraries
+#set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fsigned-char" ) # good/necessary when porting desktop libraries
 
 if( NOT X86 AND NOT ANDROID_COMPILER_IS_CLANG )
  set( ANDROID_CXX_FLAGS "-Wno-psabi ${ANDROID_CXX_FLAGS}" )
@@ -1426,7 +1426,7 @@ set( CMAKE_CXX_FLAGS_RELEASE   "-O3 -DNDEBUG"                      CACHE STRING 
 set( CMAKE_C_FLAGS_RELEASE     "-O3 -DNDEBUG"                      CACHE STRING "c Release flags" )
 set( CMAKE_CXX_FLAGS_DEBUG     "-O0 -g -DDEBUG -D_DEBUG"           CACHE STRING "c++ Debug flags" )
 set( CMAKE_C_FLAGS_DEBUG       "-O0 -g -DDEBUG -D_DEBUG"           CACHE STRING "c Debug flags" )
-set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--build-id"                    CACHE STRING "shared linker flags" )
+set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--build-id -rdynamic"          CACHE STRING "shared linker flags" )
 set( CMAKE_MODULE_LINKER_FLAGS "-Wl,--build-id -rdynamic"          CACHE STRING "module linker flags" )
 set( CMAKE_EXE_LINKER_FLAGS    "-Wl,--build-id -Wl,-z,nocopyreloc" CACHE STRING "executable linker flags" )
 
