@@ -1565,7 +1565,7 @@ endif()
 # global includes and link directories
 if( ANDROID_CRYSTAX_NDK )
   include_directories( SYSTEM "${ANDROID_NDK}/sources/crystax/include")
-  link_directories("${ANDROID_NDK}/sources/crystax/empty")
+  link_directories("${ANDROID_NDK}/sources/crystax/libs/armeabi-v7a")
 endif()
 include_directories( SYSTEM "${ANDROID_SYSROOT}/usr/include" ${ANDROID_STL_INCLUDE_DIRS} )
 get_filename_component(__android_install_path "${CMAKE_INSTALL_PREFIX}/libs/${ANDROID_NDK_ABI_NAME}" ABSOLUTE) # avoid CMP0015 policy warning
@@ -1578,7 +1578,7 @@ if( ANDROID_CRYSTAX_NDK )
     find_file(ANDROID_CRYSTAX_LIBCRYSTAX_SHARED_LIBRARY
       libcrystax.so
       HINTS
-      "${ANDROID_NDK}/sources/crystax/libs/"
+      "${ANDROID_NDK}/sources/crystax/libs/armeabi-v7a/"
       PATH_SUFFIXES
       ${ANDROID_LIB_PATH_SUFFIXES})
     mark_as_advanced(ANDROID_CRYSTAX_LIBCRYSTAX_SHARED_LIBRARY)
@@ -1587,7 +1587,7 @@ if( ANDROID_CRYSTAX_NDK )
     find_file(ANDROID_CRYSTAX_LIBCRYSTAX_STATIC_LIBRARY
       libcrystax.a
       HINTS
-      "${ANDROID_NDK}/sources/crystax/libs/"
+      "${ANDROID_NDK}/sources/crystax/libs/armeabi-v7a/"
       PATH_SUFFIXES
       ${ANDROID_LIB_PATH_SUFFIXES})
     mark_as_advanced(ANDROID_CRYSTAX_LIBCRYSTAX_STATIC_LIBRARY)
