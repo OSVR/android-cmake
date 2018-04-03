@@ -199,7 +199,10 @@ if( DEFINED CMAKE_CROSSCOMPILING )
  # subsequent toolchain loading is not really needed
  return()
 endif()
-
+if(ANDROID_NDK_TOOLCHAIN_INCLUDED)
+  return()
+endif(ANDROID_NDK_TOOLCHAIN_INCLUDED)
+set(ANDROID_NDK_TOOLCHAIN_INCLUDED true)
 if( CMAKE_TOOLCHAIN_FILE )
  # touch toolchain variable to suppress "unused variable" warning
 endif()
@@ -1267,6 +1270,7 @@ endif()
 # flags and definitions
 remove_definitions( -DANDROID )
 add_definitions( -DANDROID )
+set( ANDROID_CXX_FLAGS )
 
 if( CMAKE_VERSION VERSION_GREATER "3.0.0" )
  set( CMAKE_SYSROOT ${ANDROID_SYSROOT} )
@@ -1494,21 +1498,41 @@ if( ANDROID_COMPILER_IS_CLANG )
 endif()
 
 # cache flags
-set( CMAKE_CXX_FLAGS           ""                                  CACHE STRING "c++ flags" )
-set( CMAKE_C_FLAGS             ""                                  CACHE STRING "c flags" )
-set( CMAKE_CXX_FLAGS_RELEASE   "-O3 -DNDEBUG"                      CACHE STRING "c++ Release flags" )
-set( CMAKE_C_FLAGS_RELEASE     "-O3 -DNDEBUG"                      CACHE STRING "c Release flags" )
-set( CMAKE_CXX_FLAGS_DEBUG     "-O0 -g -DDEBUG -D_DEBUG"           CACHE STRING "c++ Debug flags" )
-set( CMAKE_C_FLAGS_DEBUG       "-O0 -g -DDEBUG -D_DEBUG"           CACHE STRING "c Debug flags" )
-set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--build-id -rdynamic"          CACHE STRING "shared linker flags" )
-set( CMAKE_MODULE_LINKER_FLAGS "-Wl,--build-id -rdynamic"          CACHE STRING "module linker flags" )
-set( CMAKE_EXE_LINKER_FLAGS    "-Wl,--build-id -Wl,-z,nocopyreloc" CACHE STRING "executable linker flags" )
+
+# Set or retrieve the cached flags.
+# This is necessary in case the user sets/changes flags in subsequent
+# configures. If we included the Android flags in here, they would get
+# overwritten.
+set(CMAKE_C_FLAGS ""
+  CACHE STRING "Flags used by the compiler during all build types.")
+set(CMAKE_CXX_FLAGS ""
+  CACHE STRING "Flags used by the compiler during all build types.")
+set(CMAKE_ASM_FLAGS ""
+  CACHE STRING "Flags used by the compiler during all build types.")
+set(CMAKE_C_FLAGS_DEBUG ""
+  CACHE STRING "Flags used by the compiler during debug builds.")
+set(CMAKE_CXX_FLAGS_DEBUG ""
+  CACHE STRING "Flags used by the compiler during debug builds.")
+set(CMAKE_ASM_FLAGS_DEBUG ""
+  CACHE STRING "Flags used by the compiler during debug builds.")
+set(CMAKE_C_FLAGS_RELEASE ""
+  CACHE STRING "Flags used by the compiler during release builds.")
+set(CMAKE_CXX_FLAGS_RELEASE ""
+  CACHE STRING "Flags used by the compiler during release builds.")
+set(CMAKE_ASM_FLAGS_RELEASE ""
+  CACHE STRING "Flags used by the compiler during release builds.")
+set(CMAKE_MODULE_LINKER_FLAGS ""
+  CACHE STRING "Flags used by the linker during the creation of modules.")
+set(CMAKE_SHARED_LINKER_FLAGS ""
+  CACHE STRING "Flags used by the linker during the creation of dll's.")
+set(CMAKE_EXE_LINKER_FLAGS ""
+  CACHE STRING "Flags used by the linker.")
 
 # put flags to cache (for debug purpose only)
-set( ANDROID_CXX_FLAGS         "${ANDROID_CXX_FLAGS}"         CACHE INTERNAL "Android specific c/c++ flags" )
-set( ANDROID_CXX_FLAGS_RELEASE "${ANDROID_CXX_FLAGS_RELEASE}" CACHE INTERNAL "Android specific c/c++ Release flags" )
-set( ANDROID_CXX_FLAGS_DEBUG   "${ANDROID_CXX_FLAGS_DEBUG}"   CACHE INTERNAL "Android specific c/c++ Debug flags" )
-set( ANDROID_LINKER_FLAGS      "${ANDROID_LINKER_FLAGS}"      CACHE INTERNAL "Android specific c/c++ linker flags" )
+# set( ANDROID_CXX_FLAGS         "${ANDROID_CXX_FLAGS}"         CACHE INTERNAL "Android specific c/c++ flags" )
+# set( ANDROID_CXX_FLAGS_RELEASE "${ANDROID_CXX_FLAGS_RELEASE}" CACHE INTERNAL "Android specific c/c++ Release flags" )
+# set( ANDROID_CXX_FLAGS_DEBUG   "${ANDROID_CXX_FLAGS_DEBUG}"   CACHE INTERNAL "Android specific c/c++ Debug flags" )
+# set( ANDROID_LINKER_FLAGS      "${ANDROID_LINKER_FLAGS}"      CACHE INTERNAL "Android specific c/c++ linker flags" )
 
 # finish flags
 if(NOT ANDROID_FINISHED_FLAGS)
